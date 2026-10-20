@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'School Market Auth',
       debugShowCheckedModeBanner: false,
-      // Апп асахад шинээр хийсэн SchoolLoginScreen харагдана
+      
       home: const SchoolLoginScreen(), 
     );
   }
