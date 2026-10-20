@@ -199,7 +199,7 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen> {
                           Icon(Icons.school_outlined, color: Color(0xFF163832), size: 20),
                           SizedBox(width: 10),
                           Text(
-                            'Continue with school',
+                            'Сургуулийн хаягаар нэвтрэх',
                             style: TextStyle(color: Color(0xFF163832), fontSize: 15, fontWeight: FontWeight.w600),
                           ),
                         ],
