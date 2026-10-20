@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:onlinezah/index.dart';
 import 'login.dart'; // Шинэ нэвтрэх хуудсаа холбож өгнө
 
 void main() {
@@ -13,8 +14,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'School Market Auth',
       debugShowCheckedModeBanner: false,
-      
-      home: const SchoolLoginScreen(), 
+
+      home: IndexPage(),
     );
   }
 }
