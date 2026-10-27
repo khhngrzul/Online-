@@ -149,7 +149,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
-                  // Буцах холбоос
+                  
                   Center(
                     child: GestureDetector(
                       onTap: () {
