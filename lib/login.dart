@@ -28,6 +28,7 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen> {
                 children: [
                   const Text(
                     'Мандах Мэдээлэл Технологийн их сургууль',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
@@ -44,8 +45,8 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-
                   
+                 
                   Container(
                     height: 50,
                     decoration: BoxDecoration(
@@ -86,7 +87,7 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen> {
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.black54,
+                                  color: Colors.white70,
                                 ),
                               ),
                             ),
@@ -217,9 +218,9 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen> {
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-                            );
+                            context,
+                            MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                          );
                         },
                         child: const Text(
                           'Нууц үг мартсан',
@@ -232,23 +233,52 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 25),
 
                   
-                  Container(
-                    width: double.infinity,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFD8E2DE)),
-                    ),
-                    child: TextButton(
-                      onPressed: () {},
-                      child: Image.network(
-                        'https://s3-alpha.figma.com/hub/file/2729744958/2a5758d6-4edb-4047-87bb-e6b94dbbbab0-cover.png',
-                        height: 22,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // 1. Google товч
+                      Expanded(
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFD8E2DE)),
+                          ),
+                          child: TextButton(
+                            onPressed: () {},
+                            child: Image.network(
+                              'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Google_Favicon_2025.svg/3840px-Google_Favicon_2025.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail',
+                              height: 22,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+
+                      // 2. Facebook товч
+                      Expanded(
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFD8E2DE)),
+                          ),
+                          child: TextButton(
+                            onPressed: () {},
+                            child: const Icon(
+                              Icons.facebook,
+                              color: Color(0xFF1877F2),
+                              size: 28,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      
+                    ],
                   ),
                 ],
               ),
