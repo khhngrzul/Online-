@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login.dart'; // Шинэ нэвтрэх хуудсаа холбож өгнө
+import 'login.dart'; 
 
 void main() {
   runApp(const MyApp());

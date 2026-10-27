@@ -6,40 +6,30 @@ class ForgotPasswordScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE6F8F5),
-              Color(0xFFFFFFFF),
-              Color(0xFFE0F4F8),
-            ],
-          ),
-        ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Logo 
                   const Text(
-                    'Reset Password',
+                    '',
                     style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF112211),
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Сургуулийн имэйл болон шинэ нууц үгээ оруулна уу.',
+                    '',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.black54,
@@ -47,121 +37,143 @@ class ForgotPasswordScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
-                  // School Email
-                  const Text(
-                    'School email',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87),
+                  // Гарчиг болон тайлбар
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Нууц үг сэргээх',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Та бүртгэлтэй и-мэйл болон шинэ нууц үгээ оруулна уу.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  
                   TextField(
                     decoration: InputDecoration(
-                      hintText: 'you@school.edu',
+                      hintText: 'И-мэйл хаяг | Утасны дугаар',
                       hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
-                      prefixIcon: const Icon(Icons.mail_outline, color: Colors.black54, size: 20),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.8),
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Color(0xFFD8E2DE)),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Color(0xFFD8E2DE)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Color(0xFF32BEB6), width: 1.5),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // New Password
-                  const Text(
-                    'New Password',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 8),
                   TextField(
                     obscureText: true,
                     decoration: InputDecoration(
                       hintText: 'Шинэ нууц үгээ оруулна уу',
                       hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
-                      prefixIcon: const Icon(Icons.lock_outline, color: Colors.black54, size: 20),
-                      suffixIcon: const Icon(Icons.visibility_off_outlined, color: Colors.black54, size: 20),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.8),
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Color(0xFFD8E2DE)),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Color(0xFFD8E2DE)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Color(0xFF32BEB6), width: 1.5),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // Confirm New Password
-                  const Text(
-                    'Confirm New Password',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87),
-                  ),
-                  const SizedBox(height: 8),
+                  
                   TextField(
                     obscureText: true,
                     decoration: InputDecoration(
-                      hintText: 'Шинэ нууц үгээ дахин оруулна уу',
+                      hintText: 'Шинэ нууц үгээ давтан оруулна уу',
                       hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
-                      prefixIcon: const Icon(Icons.lock_reset_outlined, color: Colors.black54, size: 20),
-                      suffixIcon: const Icon(Icons.visibility_off_outlined, color: Colors.black54, size: 20),
+                      suffixIcon: const Icon(Icons.visibility_off_outlined, color: Colors.black26, size: 20),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.8),
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Color(0xFFD8E2DE)),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Color(0xFFD8E2DE)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Color(0xFF32BEB6), width: 1.5),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 24),
 
-                  // Reset Password товч
+                  
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF191942),
+                        backgroundColor: const Color(0xFF32BEB6),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
                       ),
                       onPressed: () {
-                        // Энд нууц үг шинэчлэх backend/database холболт бичигдэнэ
+                        // Энд нууц үг шинэчлэх логик бичигдэнэ
                       },
                       child: const Text(
-                        'Reset Password',
-                        style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                        'Нууц үг шинэчлэх',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 30),
 
-                  // Буцах холбоос
-                  Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Нэвтрэх хэсэг рүү буцах',
-                        style: TextStyle(
-                          color: Color(0xFF11382A),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
+                  
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Нэвтрэх хэсэг рүү буцах',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
                     ),
                   ),
