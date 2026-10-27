@@ -19,6 +19,7 @@ class _IndexPageState extends State<IndexPage> {
     ForgotPasswordScreen(),
     SchoolRegisterScreen(),
     MandakhApp(),
+    CreatePostScreen(),
   ];
   @override
   Widget build(BuildContext context) {
