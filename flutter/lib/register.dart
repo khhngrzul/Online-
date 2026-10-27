@@ -68,7 +68,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: Color(0xFF32BEB6), width: 1.5),
+                        borderSide: const BorderSide(color: Color.fromARGB(255, 11, 4, 112), width: 1.5),
                       ),
                     ),
                   ),
