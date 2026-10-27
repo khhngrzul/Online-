@@ -331,7 +331,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF32BEB6),
+                              color: Color.fromARGB(255, 11, 4, 112),
                             ),
                           ),
                         ),
