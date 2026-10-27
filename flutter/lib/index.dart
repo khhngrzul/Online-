@@ -30,9 +30,11 @@ class _IndexPageState extends State<IndexPage> {
       bottomNavigationBar: ConvexAppBar(
         style: TabStyle.react,
         items: [
+          TabItem(icon: Icons.home),
           TabItem(icon: Icons.list),
           TabItem(icon: Icons.calendar_today),
           TabItem(icon: Icons.assessment),
+           TabItem(icon: Icons.zakh),
         ],
         initialActiveIndex: index,
         onTap: (int i) => {
