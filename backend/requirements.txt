@@ -1,4 +1,4 @@
-gunicorn
+gunicorn api.wsgi:application
 Django>=5.2,<5.3
 djangorestframework>=3.16,<3.17
 djangorestframework-simplejwt>=5.5,<6
