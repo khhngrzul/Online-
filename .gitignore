@@ -56,3 +56,11 @@ __pycache__/
 db.sqlite3
 media/
 staticfiles/
+
+# Django backend
+**/venv/
+**/__pycache__/
+**/.env
+**/db.sqlite3
+**/media/
+**/staticfiles/
