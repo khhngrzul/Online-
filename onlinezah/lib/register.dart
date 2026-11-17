@@ -291,33 +291,6 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen> with Ticker
                         ),
                         const SizedBox(height: 12),
 
-                        // Үйлчилгээний нөхцөл Checkbox
-                        Row(
-                          children: [
-                            SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: Checkbox(
-                                value: agreeToTerms,
-                                activeColor: wine2,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-                                onChanged: (value) {
-                                  setState(() {
-                                    agreeToTerms = value ?? false;
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Expanded(
-                              child: Text(
-                                'Үйлчилгээний нөхцөл болон Нууцлалын бодлогыг зөвшөөрч байна.',
-                                style: TextStyle(fontSize: 11, color: Colors.black87),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
 
                         // БҮРТГҮҮЛЭХ Товчлуур
                         Container(
