@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: campus-hub
+    runtime: static
+    rootDir: onlinezah
+    buildCommand: bash render_build.sh
+    staticPublishPath: build/web
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

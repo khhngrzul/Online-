@@ -103,7 +103,7 @@ void editProfile(BuildContext context) {
                 u.bio = bio.text.trim();
                 u.year = year;
                 u.img = img;
-                app.change();
+                app.saveProfile();
                 Navigator.pop(ctx);
               },
               child: const Text('Хадгалах'),

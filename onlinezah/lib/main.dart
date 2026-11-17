@@ -1,11 +1,18 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'firebase_options.dart';
 import 'models.dart';
 import 'nevtreh.dart';
 import 'nuur.dart';
 import 'zar_chat.dart';
 import 'profile.dart';
 
-void main() => runApp(const CampusApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  app.startAuth();
+  runApp(const CampusApp());
+}
 
 class CampusApp extends StatelessWidget {
   const CampusApp({super.key});
@@ -15,7 +22,9 @@ class CampusApp extends StatelessWidget {
         title: 'Campus Hub',
         themeMode: ThemeMode.light,
         theme: ThemeData(useMaterial3: true, brightness: Brightness.light, colorSchemeSeed: kPri, scaffoldBackgroundColor: const Color(0xFFFFF8F9)),
-        home: ListenableBuilder(listenable: app, builder: (_, __) => app.me == null ? const AuthPage() : const Shell()),
+        home: ListenableBuilder(listenable: app, builder: (_, _) => !app.ready
+            ? const Scaffold(body: Center(child: CircularProgressIndicator(color: kPri)))
+            : app.me == null ? const AuthPage() : const Shell()),
       );
 }
 

@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -113,23 +116,115 @@ class AppState extends ChangeNotifier {
     sug.addAll([Suggestion('Номын сангийн цагийг 22:00 хүртэл сунгаач', 34), Suggestion('Столовойд ногоон хоол нэмээч', 21)]);
   }
 
-  String? login(String code, String pass) {
-    final u = users[code];
-    if (u == null || u.pass != pass) return 'Оюутны код эсвэл нууц үг буруу';
-    me = u;
-    notifyListeners();
-    return null;
+  // ===== FIREBASE НЭВТРЭЛТ =====
+  // Firebase Auth нь и-мэйл шаарддаг тул оюутны кодоос дотоод и-мэйл үүсгэнэ:
+  //   B230910001  →  b230910001@campushub.app
+  // Хэрэглэгчийн мэдээлэл Firestore-ийн users/{uid} баримтад хадгалагдана.
+  final _auth = fb.FirebaseAuth.instance;
+  final _db = FirebaseFirestore.instance;
+  StreamSubscription<fb.User?>? _authSub;
+
+  /// Firebase хэрэглэгчийн төлөвийг шалгаж дуусмагц true болно.
+  bool ready = false;
+  bool _busy = false; // login/register явагдаж байх үед listener профайл ачаалахгүй
+
+  static String _emailFor(String code) => '${code.toLowerCase()}@campushub.app';
+
+  /// App асахад нэг удаа дуудна: өмнө нэвтэрсэн хэрэглэгчийг сэргээнэ.
+  void startAuth() {
+    _authSub ??= _auth.authStateChanges().listen((fbUser) async {
+      if (fbUser == null) {
+        me = null;
+      } else if (me == null && !_busy) {
+        try {
+          me = await _loadProfile(fbUser.uid);
+        } catch (_) {
+          me = null;
+        }
+      }
+      ready = true;
+      notifyListeners();
+    });
   }
 
-  String? register(User u) {
-    if (users.containsKey(u.code)) return 'Энэ оюутны код бүртгэлтэй байна';
+  Future<User?> _loadProfile(String uid) async {
+    final d = (await _db.collection('users').doc(uid).get()).data();
+    if (d == null) return null;
+    final u = User(d['name'] ?? '', d['code'] ?? '', '', d['faculty'] ?? '', (d['year'] ?? 1) as int, d['bio'] ?? '');
     users[u.code] = u;
-    me = u;
-    notifyListeners();
-    return null;
+    return u;
   }
 
-  void logout() { me = null; notifyListeners(); }
+  Future<String?> login(String code, String pass) async {
+    _busy = true;
+    try {
+      final cred = await _auth.signInWithEmailAndPassword(email: _emailFor(code), password: pass);
+      final u = await _loadProfile(cred.user!.uid);
+      if (u == null) {
+        await _auth.signOut();
+        return 'Профайл олдсонгүй. Дахин бүртгүүлнэ үү.';
+      }
+      me = u;
+      notifyListeners();
+      return null;
+    } on fb.FirebaseAuthException catch (e) {
+      return _authError(e);
+    } catch (e) {
+      return 'Алдаа гарлаа: $e';
+    } finally {
+      _busy = false;
+    }
+  }
+
+  Future<String?> register(User u) async {
+    _busy = true;
+    try {
+      final cred = await _auth.createUserWithEmailAndPassword(email: _emailFor(u.code), password: u.pass);
+      await _db.collection('users').doc(cred.user!.uid).set({
+        'name': u.name,
+        'code': u.code,
+        'faculty': u.faculty,
+        'year': u.year,
+        'bio': u.bio,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      u.pass = ''; // нууц үгийг санах ойд хадгалахгүй
+      users[u.code] = u;
+      me = u;
+      notifyListeners();
+      return null;
+    } on fb.FirebaseAuthException catch (e) {
+      return _authError(e);
+    } catch (e) {
+      return 'Алдаа гарлаа: $e';
+    } finally {
+      _busy = false;
+    }
+  }
+
+  /// Профайл засварыг (нэр, bio, курс) Firestore-д хадгална.
+  Future<void> saveProfile() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null || me == null) return;
+    notifyListeners();
+    await _db.collection('users').doc(uid).update({'name': me!.name, 'bio': me!.bio, 'year': me!.year});
+  }
+
+  Future<void> logout() async {
+    await _auth.signOut();
+    me = null;
+    notifyListeners();
+  }
+
+  static String _authError(fb.FirebaseAuthException e) => switch (e.code) {
+        'user-not-found' || 'wrong-password' || 'invalid-credential' => 'Оюутны код эсвэл нууц үг буруу',
+        'email-already-in-use' => 'Энэ оюутны код бүртгэлтэй байна',
+        'weak-password' => 'Нууц үг хэт сул (дор хаяж 6 тэмдэгт)',
+        'too-many-requests' => 'Хэт олон оролдлого. Түр хүлээгээд дахин оролдоно уу',
+        'network-request-failed' => 'Интернэт холболтоо шалгана уу',
+        'operation-not-allowed' => 'Firebase Console дээр Email/Password нэвтрэлтийг идэвхжүүлээгүй байна',
+        _ => 'Алдаа: ${e.message ?? e.code}',
+      };
   void change() => notifyListeners();
 
   void send(String other, String text) {
