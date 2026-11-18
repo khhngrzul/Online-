@@ -14,11 +14,14 @@ class _AuthPageState extends State<AuthPage> {
   String faculty = 'Програм хангамж';
   int year = 1;
   String? error;
+  bool loading = false;
 
-  void submit() {
+  Future<void> submit() async {
     if (!form.currentState!.validate()) return;
     final c = code.text.trim().toUpperCase();
-    setState(() => error = login ? app.login(c, pass.text) : app.register(User(name.text.trim(), c, pass.text, faculty, year)));
+    setState(() { loading = true; error = null; });
+    final e = login ? await app.login(c, pass.text) : await app.register(User(name.text.trim(), c, pass.text, faculty, year));
+    if (mounted) setState(() { loading = false; error = e; });
   }
 
   @override
@@ -74,7 +77,7 @@ class _AuthPageState extends State<AuthPage> {
                           labelText: 'Нууц үг', prefixIcon: const Icon(Icons.lock_outline), border: const OutlineInputBorder(),
                           suffixIcon: IconButton(icon: Icon(hide ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => hide = !hide)),
                         ),
-                        validator: (v) => v!.length < 4 ? 'Дор хаяж 4 тэмдэгт' : null,
+                        validator: (v) => v!.length < 6 ? 'Дор хаяж 6 тэмдэгт' : null,
                       ),
                       if (!login) ...[
                         const SizedBox(height: 12),
@@ -94,8 +97,17 @@ class _AuthPageState extends State<AuthPage> {
                       ],
                       if (error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(error!, style: const TextStyle(color: Colors.red))),
                       const SizedBox(height: 16),
-                      SizedBox(width: double.infinity, height: 48, child: FilledButton(style: FilledButton.styleFrom(backgroundColor: kDark), onPressed: submit, child: Text(login ? 'Нэвтрэх' : 'Бүртгэл үүсгэх'))),
-                      if (login) TextButton(onPressed: () { code.text = 'B240101001'; pass.text = '1234'; }, child: const Text('Демо акаунтаар оролдох')),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: FilledButton(
+                          style: FilledButton.styleFrom(backgroundColor: kDark),
+                          onPressed: loading ? null : submit,
+                          child: loading
+                              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                              : Text(login ? 'Нэвтрэх' : 'Бүртгэл үүсгэх'),
+                        ),
+                      ),
                     ]),
                   ),
                 ),
