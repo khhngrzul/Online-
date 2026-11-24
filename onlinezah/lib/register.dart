@@ -21,9 +21,10 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen> with Ticker
   final List<String> departmentOptions = [
     'Програм хангамж',
     'Мэдээллийн систем',
-    'Компьютерийн ухаан',
-    'Кибер аюулгүй байдал',
-    'Хиймэл оюун ухаан',
+    'Санхүү, банк',
+    'Маркетинг',
+    'НББ',
+    'Логистик',
     'Бусад',
   ];
 
