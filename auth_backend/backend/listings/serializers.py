@@ -1,4 +1,4 @@
-
+	
 from django.contrib.auth import get_user_model
 from django.db.models import Q, Value
 from django.db.models.functions import Concat, Lower
@@ -24,8 +24,9 @@ class LoginSerializer(TokenObtainPairSerializer):
         users = User.objects.filter(is_active=True).annotate(
             full_name=Lower(Concat("first_name", Value(" "), "last_name")),
             reverse_full_name=Lower(Concat("last_name", Value(" "), "first_name")),
-        ).filter(
-            Q(email__iexact=identifier)
+                ).filter(
+            Q(username__iexact=identifier)
+            | Q(email__iexact=identifier)
             | Q(first_name__iexact=identifier)
             | Q(last_name__iexact=identifier)
             | Q(full_name=normalized_identifier)
@@ -42,14 +43,13 @@ class LoginSerializer(TokenObtainPairSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    last_name = serializers.CharField(label="Овог", max_length=150)
-    first_name = serializers.CharField(label="Нэр", max_length=150)
+    last_name = serializers.CharField(label="Овог", max_length=150, required=False, allow_blank=True, default="")
+    first_name = serializers.CharField(label="Нэр", max_length=150, required=False, allow_blank=True, default="")
+    phone_number = serializers.CharField(label="Утасны дугаар", max_length=20, write_only=True, required=False, allow_blank=True, default="")
     student_code = serializers.CharField(
         label="Оюутны код", max_length=30, write_only=True
     )
-    phone_number = serializers.CharField(
-        label="Утасны дугаар", max_length=20, write_only=True
-    )
+
     password = serializers.CharField(
         label="Нууц үг",
         write_only=True,
@@ -89,7 +89,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop("password")
         student_code = validated_data.pop("student_code")
-        phone_number = validated_data.pop("phone_number")
+        phone_number = validated_data.pop("phone_number", "")
        
         validated_data["username"] = student_code
         user = User(**validated_data)

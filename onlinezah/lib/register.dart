@@ -107,7 +107,9 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
     debugPrint('Тэнхим: $department');
   }
 
-  void _showMessage(String message) {
+  void _showMessage(String message)
+   {
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

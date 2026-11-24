@@ -3,6 +3,8 @@ import 'package:lottie/lottie.dart';
 import 'models.dart';
 import 'register.dart';
 import 'forget_password.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class SchoolLoginScreen extends StatefulWidget {
   const SchoolLoginScreen({super.key});
@@ -37,14 +39,63 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen>
     _lottieController = AnimationController(vsync: this);
   }
 
-  void _submitLogin() {
-    final code = codeController.text.trim().toUpperCase();
+     Future<void> _submitLogin() async {
+    final code = codeController.text.trim();
     final password = passwordController.text;
-    setState(() {
-      loginError = code.isEmpty || password.isEmpty
-          ? 'Оюутны код болон нууц үгээ оруулна уу'
-          : app.login(code, password);
-    });
+    if (code.isEmpty || password.isEmpty) {
+      setState(() => loginError = 'Оюутны код болон нууц үгээ оруулна уу');
+      return;
+    }
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8001/api/auth/login/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': code, 'password': password}),
+      );
+      if (!mounted) return;
+
+      if (response.statusCode != 200) {
+        setState(() => loginError = 'Оюутны код эсвэл нууц үг буруу');
+        return;
+      }
+
+      final data = jsonDecode(response.body);
+      final access = data['access'] as String;
+
+      // Хэрэглэгчийн мэдээллийг Django-оос авах
+      final meRes = await http.get(
+        Uri.parse('http://127.0.0.1:8001/api/auth/me/'),
+        headers: {'Authorization': 'Bearer $access'},
+      );
+      if (!mounted) return;
+      if (meRes.statusCode != 200) {
+        setState(() => loginError = 'Хэрэглэгчийн мэдээлэл авч чадсангүй');
+        return;
+      }
+      final me = jsonDecode(utf8.decode(meRes.bodyBytes));
+
+      final studentCode = (me['student_code'] ?? code).toString();
+      final fullName =
+          '${me['last_name'] ?? ''} ${me['first_name'] ?? ''}'.trim();
+
+      // Апп доторх хэрэглэгч болгож хадгалаад үндсэн дэлгэц рүү шилжинэ
+      final user = User(
+        fullName.isEmpty ? studentCode : fullName,
+        studentCode,
+        password,
+        '', // тэнхим: backend-д хадгалдаггүй
+        1, // курс: backend-д хадгалдаггүй
+      );
+      app.users.remove(studentCode);
+      app.register(user); // app.me = user болж, Shell рүү шилжинэ
+
+      setState(() => loginError = null);
+    } catch (e) {
+      debugPrint('НЭВТРЭХ АЛДАА: $e');
+      if (mounted) {
+        setState(() => loginError = 'Сервертэй холбогдож чадсангүй: $e');
+      }
+    }
   }
 
   void _loginAsDemo() {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'nevtreh.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class SchoolRegisterScreen extends StatefulWidget {
   const SchoolRegisterScreen({super.key});
@@ -11,9 +13,13 @@ class SchoolRegisterScreen extends StatefulWidget {
 
 class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
     with TickerProviderStateMixin {
+  // Backend хаяг. Android emulator дээр 10.0.2.2 болгоно.
+  static const String apiBase = 'http://127.0.0.1:8001';
+
   bool agreeToTerms = false;
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
+  bool _loading = false;
 
   String? selectedCourse;
   final List<String> courseOptions = [
@@ -33,11 +39,18 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
     'Бусад',
   ];
 
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmController = TextEditingController();
   final TextEditingController _customDepartmentController =
       TextEditingController();
   late final AnimationController _lottieController;
 
-  // 🍷 Wine Color Palette кодууд[cite: 7]
+  // 🍷 Wine Color Palette
   static const Color wine1 = Color(0xFFA2304F);
   static const Color wine2 = Color(0xFF8D1538);
   static const Color wine3 = Color(0xFF790222);
@@ -56,8 +69,78 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
   @override
   void dispose() {
     _lottieController.dispose();
+    _lastNameController.dispose();
+    _firstNameController.dispose();
+    _codeController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
     _customDepartmentController.dispose();
     super.dispose();
+  }
+
+  void _msg(String text) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  Future<void> _submit() async {
+    if (_lastNameController.text.trim().isEmpty ||
+        _firstNameController.text.trim().isEmpty ||
+        _codeController.text.trim().isEmpty ||
+        _phoneController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      _msg('Бүх талбарыг бөглөнө үү');
+      return;
+    }
+    if (_passwordController.text.length < 8) {
+      _msg('Нууц үг хамгийн багадаа 8 тэмдэгт байна');
+      return;
+    }
+    if (_passwordController.text != _confirmController.text) {
+      _msg('Нууц үг таарахгүй байна');
+      return;
+    }
+    if (!agreeToTerms) {
+      _msg('Үйлчилгээний нөхцөлийг зөвшөөрнө үү');
+      return;
+    }
+
+    setState(() => _loading = true);
+    try {
+      final response = await http.post(
+        Uri.parse('$apiBase/api/auth/register/'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'last_name': _lastNameController.text.trim(),
+          'first_name': _firstNameController.text.trim(),
+          'student_code': _codeController.text.trim(),
+          'phone_number': _phoneController.text.trim(),
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text,
+        }),
+      );
+      final body = utf8.decode(response.bodyBytes);
+      debugPrint('хариу: ${response.statusCode} $body');
+      if (!mounted) return;
+
+      if (response.statusCode == 201) {
+        _msg('Амжилттай бүртгэгдлээ');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SchoolLoginScreen()),
+        );
+      } else {
+        _msg('Алдаа (${response.statusCode}): $body');
+      }
+    } catch (e) {
+      debugPrint('АЛДАА: $e');
+      if (mounted) _msg('Сервертэй холбогдож чадсангүй: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -79,13 +162,14 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
           child: Column(
             children: [
               // ================= 1. ДЭЭД ХЭСЭГ =================
-              SizedBox(
-                height: 140,
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 8),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(
-                      height: 65,
+                      height: 60,
                       child: Lottie.network(
                         'https://lottie.host/1c5d2fa7-c7d6-4def-847f-3111b218d11a/X2w9Je8Z4W.lottie',
                         controller: _lottieController,
@@ -160,6 +244,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                                   _buildLabel('Овог'),
                                   const SizedBox(height: 4),
                                   _buildTextField(
+                                      controller: _lastNameController,
                                       hintText: 'Овог',
                                       icon: Icons.person_outline_rounded),
                                 ],
@@ -173,6 +258,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                                   _buildLabel('Нэр'),
                                   const SizedBox(height: 4),
                                   _buildTextField(
+                                      controller: _firstNameController,
                                       hintText: 'Нэр',
                                       icon: Icons.person_outline_rounded),
                                 ],
@@ -186,21 +272,34 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                         _buildLabel('Оюутны код'),
                         const SizedBox(height: 4),
                         _buildTextField(
+                            controller: _codeController,
                             hintText: 'Оюутны кодоо оруулна уу',
                             icon: Icons.badge_outlined),
                         const SizedBox(height: 12),
 
-                        // 3. И-мэйл хаяг
+                        // 3. Утасны дугаар
+                        _buildLabel('Утасны дугаар'),
+                        const SizedBox(height: 4),
+                        _buildTextField(
+                          controller: _phoneController,
+                          hintText: 'Утасны дугаараа оруулна уу',
+                          icon: Icons.phone_outlined,
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 12),
+
+                        // 4. И-мэйл хаяг
                         _buildLabel('И-мэйл хаяг'),
                         const SizedBox(height: 4),
                         _buildTextField(
+                          controller: _emailController,
                           hintText: 'name@example.com',
                           icon: Icons.alternate_email_rounded,
                           keyboardType: TextInputType.emailAddress,
                         ),
                         const SizedBox(height: 12),
 
-                        // 4. Курс & Тэнхим
+                        // 5. Курс & Тэнхим
                         Row(
                           children: [
                             Expanded(
@@ -281,11 +380,12 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
 
                         const SizedBox(height: 12),
 
-                        // 5. Нууц үг
+                        // 6. Нууц үг
                         _buildLabel('Нууц үг'),
                         const SizedBox(height: 4),
                         _buildTextField(
-                          hintText: 'Нууц үгээ оруулна уу',
+                          controller: _passwordController,
+                          hintText: 'Нууц үгээ оруулна уу (8+ тэмдэгт)',
                           icon: Icons.lock_outline_rounded,
                           isPassword: true,
                           obscureText: obscurePassword,
@@ -297,10 +397,11 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                         ),
                         const SizedBox(height: 12),
 
-                        // 6. Нууц үг давтах
+                        // 7. Нууц үг давтах
                         _buildLabel('Нууц үг давтах'),
                         const SizedBox(height: 4),
                         _buildTextField(
+                          controller: _confirmController,
                           hintText: 'Нууц үгээ дахин оруулна уу',
                           icon: Icons.lock_outline_rounded,
                           isPassword: true,
@@ -332,6 +433,13 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               ),
                             ),
                             const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Үйлчилгээний нөхцөлийг зөвшөөрч байна',
+                                style:
+                                    TextStyle(fontSize: 12, color: darkText),
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 18),
@@ -359,16 +467,25 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30)),
                             ),
-                            onPressed: () {},
-                            child: const Text(
-                              'БҮРТГҮҮЛЭХ',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
+                            onPressed: _loading ? null : _submit,
+                            child: _loading
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'БҮРТГҮҮЛЭХ',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -457,6 +574,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
   }
 
   Widget _buildTextField({
+    required TextEditingController controller,
     required String hintText,
     required IconData icon,
     bool isPassword = false,
@@ -471,6 +589,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
         border: Border.all(color: inputBorderColor, width: 1.2),
       ),
       child: TextField(
+        controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         style: const TextStyle(fontSize: 13, color: darkText),
