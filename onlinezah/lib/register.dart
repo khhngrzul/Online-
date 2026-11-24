@@ -107,6 +107,15 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
     debugPrint('Тэнхим: $department');
   }
 
+  void _validateOnChange() {
+    if (_formKey.currentState == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _formKey.currentState?.validate();
+    });
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -147,14 +156,19 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                   ),
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+                ),
                 child: Column(
                   children: [
                     _buildHeader(),
 
                     Container(
                       width: double.infinity,
-                      margin: const EdgeInsets.only(top: 10),
-                      padding: const EdgeInsets.fromLTRB(24, 26, 24, 30),
+                      margin: const EdgeInsets.only(top: 6),
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.only(
@@ -169,7 +183,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                           children: [
                             _buildAuthToggle(),
 
-                            const SizedBox(height: 28),
+                            const SizedBox(height: 22),
 
                             _buildSectionTitle(
                               'Хувийн мэдээлэл',
@@ -177,7 +191,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               Icons.person_outline_rounded,
                             ),
 
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 14),
 
                             Row(
                               children: [
@@ -201,7 +215,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               ],
                             ),
 
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 14),
 
                             // ОЮУТНЫ КОД
                             _buildTextField(
@@ -230,7 +244,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               },
                             ),
 
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 14),
 
                             // И-МЭЙЛ
                             _buildTextField(
@@ -253,7 +267,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               },
                             ),
 
-                            const SizedBox(height: 28),
+                            const SizedBox(height: 22),
 
                             _buildSectionTitle(
                               'Сургалтын мэдээлэл',
@@ -261,7 +275,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               Icons.school_outlined,
                             ),
 
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 14),
 
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,6 +292,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                                       setState(() {
                                         selectedCourse = value;
                                       });
+                                      _validateOnChange();
                                     },
                                   ),
                                 ),
@@ -298,6 +313,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                                           customDepartmentController.clear();
                                         }
                                       });
+                                      _validateOnChange();
                                     },
                                   ),
                                 ),
@@ -305,7 +321,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                             ),
 
                             if (selectedDepartment == 'Бусад') ...[
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 14),
                               _buildTextField(
                                 label: 'Бусад тэнхимийн нэр',
                                 hint: 'Тэнхимийн нэрээ бичнэ үү',
@@ -314,7 +330,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               ),
                             ],
 
-                            const SizedBox(height: 28),
+                            const SizedBox(height: 22),
 
                             _buildSectionTitle(
                               'Нууцлалын мэдээлэл',
@@ -322,7 +338,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               Icons.lock_outline_rounded,
                             ),
 
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 14),
 
                             // НУУЦ ҮГ
                             _buildTextField(
@@ -368,7 +384,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
                               },
                             ),
 
-                            const SizedBox(height: 18),
+                            const SizedBox(height: 14),
 
                             // НУУЦ ҮГ ДАВТАХ
                             _buildTextField(
@@ -418,13 +434,13 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
   // HEADER
   Widget _buildHeader() {
     return SizedBox(
-      height: 190,
+      height: 160,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 72,
-            height: 72,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(24),
@@ -448,13 +464,13 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
             ),
           ),
 
-          const SizedBox(height: 13),
+          const SizedBox(height: 10),
 
           const Text(
             'БҮРТГЭЛ ҮҮСГЭХ',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 23,
+              fontSize: 21,
               fontWeight: FontWeight.w800,
               letterSpacing: 2,
             ),
@@ -608,9 +624,11 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
 
         TextFormField(
           controller: controller,
+          onChanged: (_) => _validateOnChange(),
           keyboardType: keyboardType,
           obscureText: obscureText,
           inputFormatters: inputFormatters,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           validator:
               validator ??
               (value) {
@@ -698,6 +716,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
         DropdownButtonFormField<String>(
           value: value,
           isExpanded: true,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (value) {
             if (value == null) {
               return 'Сонгоно уу';
@@ -724,6 +743,14 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: wine2, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Colors.redAccent),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Colors.redAccent),
             ),
           ),
           hint: Text(
