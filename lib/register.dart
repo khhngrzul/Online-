@@ -3,6 +3,7 @@ import 'package:lottie/lottie.dart';
 import 'nevtreh.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'api.dart';
 
 class SchoolRegisterScreen extends StatefulWidget {
   const SchoolRegisterScreen({super.key});
@@ -13,9 +14,6 @@ class SchoolRegisterScreen extends StatefulWidget {
 
 class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
     with TickerProviderStateMixin {
-  // Backend хаяг. Android emulator дээр 10.0.2.2 болгоно.
-  static const String apiBase = 'http://127.0.0.1:8001';
-
   bool agreeToTerms = false;
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
@@ -111,7 +109,7 @@ class _SchoolRegisterScreenState extends State<SchoolRegisterScreen>
     setState(() => _loading = true);
     try {
       final response = await http.post(
-        Uri.parse('$apiBase/api/auth/register/'),
+        Uri.parse('${Api.base}/api/auth/register/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'last_name': _lastNameController.text.trim(),

@@ -220,8 +220,7 @@ class HomeTab extends StatelessWidget {
                                       right: 8,
                                       child: GestureDetector(
                                         onTap: () {
-                                          isSaved ? app.saved.remove(i) : app.saved.add(i);
-                                          app.change();
+                                          app.toggleSavedJob(i);
                                         },
                                         child: Container(
                                           padding: const EdgeInsets.all(6),

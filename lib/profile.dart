@@ -33,7 +33,7 @@ class ProfileTab extends StatelessWidget {
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: cardBox(),
-              child: Row(children: [stat('${mine.length}', 'Миний зар'), stat('${app.favs.length}', 'Хадгалсан'), stat('${app.posts.where((p) => p.author == u).length}', 'Нийтлэл')]),
+              child: Row(children: [stat('${mine.length}', 'Миний зар'), stat('${app.favs.length + app.saved.length}', 'Хадгалсан'), stat('${app.posts.where((p) => p.author == u).length}', 'Нийтлэл')]),
             ),
             GestureDetector(
               onTap: () { app.quoteIdx++; app.change(); },
@@ -65,6 +65,17 @@ class ProfileTab extends StatelessWidget {
                 title('Хадгалсан зарууд'),
                 if (app.favs.isEmpty) const Text('Хадгалсан зар алга'),
                 for (final i in app.favs) row(i, '${i.owner.name} · ${i.price}'),
+                title('Хадгалсан ажлууд'),
+                if (app.saved.isEmpty) const Text('Хадгалсан ажлын зар алга'),
+                for (final i in app.saved)
+                  ListTile(
+                    leading: const CircleAvatar(
+                      backgroundColor: kSoft,
+                      child: Icon(Icons.work_outline, color: kPri),
+                    ),
+                    title: Text(jobs[i].title),
+                    subtitle: Text('${jobs[i].company} · ${jobs[i].pay}'),
+                  ),
                 const SizedBox(height: 30),
               ]),
             ),

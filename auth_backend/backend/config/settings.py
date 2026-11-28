@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "listings",
+    "items",
+    "community",
 ]
 
 MIDDLEWARE = [
@@ -131,6 +133,7 @@ CORS_ALLOWED_ORIGINS = env.list(
     default=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://campus-hub-web.onrender.com",
     ],
 )
 

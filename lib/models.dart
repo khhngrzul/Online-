@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ===== ӨНГӨ =====
 const kInk = Color(0xFF3F0112),
@@ -55,14 +57,24 @@ enum ItemCategory {
 }
 
 extension ItemCategoryX on ItemCategory {
-  String get label => const {
-        ItemCategory.all: 'Бүгд',
-        ItemCategory.books: 'Ном',
-        ItemCategory.electronics: 'Цахилгаан хэрэгсэл',
-        ItemCategory.accessories: 'Бусад',
-        ItemCategory.clothing: 'Хувцас',
-        ItemCategory.sports: 'Спорт',
-      }[this]!;
+  String get label {
+    switch (this) {
+      case ItemCategory.all:
+        return 'Бүгд';
+      case ItemCategory.books:
+        return 'Ном';
+      case ItemCategory.electronics:
+        return 'Электрон';
+      case ItemCategory.accessories:
+        return 'Аксессуар';
+      case ItemCategory.clothing:
+        return 'Хувцас';
+      case ItemCategory.transport:
+        return 'Унаа';
+      case ItemCategory.sports:
+        return 'Спорт';
+    }
+  }
 }
 
 class User {
@@ -71,6 +83,14 @@ class User {
   Uint8List? img;
   User(this.name, this.code, this.pass, this.faculty, this.year,
       [this.bio = '']);
+
+
+  @override
+  bool operator ==(Object other) =>
+      other is User && other.code.toLowerCase() == code.toLowerCase();
+
+  @override
+  int get hashCode => code.toLowerCase().hashCode;
 }
 
 class Item {
@@ -79,8 +99,21 @@ class Item {
   ItemCategory category;
   User owner;
   Uint8List? img;
+  int? id;
   Item(this.name, this.desc, this.price, this.emoji, this.kind, this.owner,
-      [this.img, this.category = ItemCategory.electronics]);
+      [this.img, this.category = ItemCategory.electronics, this.id]);
+
+  String get favoriteKey {
+    if (id != null) return 'id:$id';
+    return 'item:${name.trim()}|${owner.code.trim()}|${desc.trim()}';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is Item && favoriteKey == other.favoriteKey;
+
+  @override
+  int get hashCode => favoriteKey.hashCode;
 }
 
 class Post {
@@ -90,6 +123,7 @@ class Post {
   final likes = <User>{};
   final comments = <(User, String)>[];
   Post(this.author, this.text, [this.img]);
+  int? id;
 }
 
 class Suggestion {
@@ -97,6 +131,7 @@ class Suggestion {
   int votes;
   bool liked = false;
   Suggestion(this.text, this.votes);
+  int? id;
 }
 
 class Job {
@@ -198,11 +233,194 @@ class AppState extends ChangeNotifier {
   }
 
   void logout() {
+    Api.access = null;
+    Api.refresh = null;
+    favs.clear();
+    saved.clear();
     me = null;
     notifyListeners();
   }
 
   void change() => notifyListeners();
+  String get _favoriteKey =>
+      'favorite_items:${me?.code.toLowerCase() ?? 'guest'}';
+  String get _savedJobsKey =>
+      'saved_jobs:${me?.code.toLowerCase() ?? 'guest'}';
+
+  Future<void> toggleSavedJob(int index) async {
+    if (saved.contains(index)) {
+      saved.remove(index);
+    } else {
+      saved.add(index);
+    }
+    notifyListeners();
+    await _persistSavedJobs();
+  }
+
+  Future<void> _persistSavedJobs() async {
+    if (me == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        _savedJobsKey,
+        saved.map((index) => index.toString()).toList(),
+      );
+    } catch (e) {
+      debugPrint('Хадгалсан ажлыг хадгалж чадсангүй: $e');
+    }
+  }
+
+  Future<void> restoreSavedJobs() async {
+    if (me == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final indexes = prefs
+              .getStringList(_savedJobsKey)
+              ?.map(int.tryParse)
+              .whereType<int>()
+              .where((index) => index >= 0 && index < jobs.length)
+              .toSet() ??
+          <int>{};
+      saved
+        ..clear()
+        ..addAll(indexes);
+    } catch (e) {
+      debugPrint('Хадгалсан ажлыг сэргээж чадсангүй: $e');
+    }
+    notifyListeners();
+  }
+
+  Future<void> toggleFavorite(Item item) async {
+    if (favs.contains(item)) {
+      favs.remove(item);
+    } else {
+      favs.add(item);
+    }
+    notifyListeners();
+    await _persistFavorites();
+  }
+
+  Future<void> _persistFavorites() async {
+    if (me == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        _favoriteKey,
+        favs.map((item) => item.favoriteKey).toList(),
+      );
+    } catch (e) {
+      debugPrint('Хадгалсан зарыг хадгалж чадсангүй: $e');
+    }
+  }
+
+  Future<void> restoreFavorites() async {
+    if (me == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final storedKeys =
+          prefs.getStringList(_favoriteKey)?.toSet() ?? <String>{};
+      final savedKeys = <String>{...storedKeys};
+      for (final key in storedKeys) {
+        if (key.startsWith('id:')) {
+          savedKeys.add(key);
+        } else if (int.tryParse(key) != null) {
+          savedKeys.add('id:$key');
+        }
+      }
+      favs
+        ..clear()
+        ..addAll(items.where((item) => savedKeys.contains(item.favoriteKey)));
+    } catch (e) {
+      debugPrint('Хадгалсан зар сэргээж чадсангүй: $e');
+    }
+    notifyListeners();
+  }
+
+  Future<void> loadRemote() async {
+    try {
+      items
+        ..clear()
+        ..addAll(await Api.fetchItems());
+    } catch (e) {
+      debugPrint('Зар татаж чадсангүй: $e');
+    }
+    await restoreFavorites();
+    await restoreSavedJobs();
+    try {
+      posts
+        ..clear()
+        ..addAll(await Api.fetchPosts());
+    } catch (e) {
+      debugPrint('Нийтлэл татаж чадсангүй: $e');
+    }
+    try {
+      sug
+        ..clear()
+        ..addAll(await Api.fetchSuggestions());
+    } catch (e) {
+      debugPrint('Санал гомдол татаж чадсангүй: $e');
+    }
+    notifyListeners();
+  }
+
+  Future<void> addPost(String text, Uint8List? img) async {
+    try {
+      posts.insert(0, await Api.createPost(text, img));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Нийтлэл нэмж чадсангүй: $e');
+    }
+  }
+
+  Future<void> likePost(Post p) async {
+    final u = me;
+    if (u == null) return;
+    if (p.likes.contains(u)) {
+      p.likes.remove(u);
+    } else {
+      p.likes.add(u);
+    }
+    notifyListeners();
+    if (p.id == null) return;
+    try {
+      await Api.likePost(p);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Лайк хийж чадсангүй: $e');
+    }
+  }
+
+  Future<void> commentPost(Post p, String text) async {
+    if (p.id == null) return;
+    try {
+      await Api.commentPost(p, text);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Сэтгэгдэл нэмж чадсангүй: $e');
+    }
+  }
+
+  Future<void> addSuggestion(String text) async {
+    try {
+      sug.insert(0, await Api.createSuggestion(text));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Санал нэмж чадсангүй: $e');
+    }
+  }
+
+  Future<void> voteSuggestion(Suggestion s) async {
+    s.liked = !s.liked;
+    notifyListeners();
+    if (s.id == null) return;
+    try {
+      await Api.voteSuggestion(s);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Санал өгч чадсангүй: $e');
+    }
+  }
+
 
   void send(String other, String text) {
     chats.putIfAbsent(other, () => []).add(Msg(true, text));
@@ -526,31 +744,31 @@ void addItemSheet(BuildContext context) {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                onPressed: () {
-                  if (titleController.text.trim().isEmpty || app.me == null)
+                                onPressed: () async {
+                  if (titleController.text.trim().isEmpty || app.me == null) {
                     return;
-
-                  String priceText = selectedKind == Kind.sell
-                      ? (priceController.text.trim().isEmpty
-                          ? '0₮'
-                          : '${priceController.text.trim()}₮')
-                      : selectedKind.label;
-
-                  app.items.insert(
-                    0,
-                    Item(
-                      titleController.text.trim(),
-                      descController.text.trim(),
-                      priceText,
-                      '📦',
-                      selectedKind,
-                      app.me!,
-                      img,
-                      selectedCategory,
-                    ),
-                  );
-                  app.change();
-                  Navigator.pop(ctx);
+                  }
+                  try {
+                    final created = await Api.createItem(
+                      title: titleController.text.trim(),
+                      description: descController.text.trim(),
+                      price: priceController.text,
+                      kind: selectedKind,
+                      imageBytes: img,
+                    );
+                    // Зураг, ангилал backend-д хадгалагдахгүй, түр харуулна
+                    created.img = img;
+                    created.category = selectedCategory;
+                    app.items.insert(0, created);
+                    app.change();
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  } catch (e) {
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        SnackBar(content: Text('Алдаа: $e')),
+                      );
+                    }
+                  }
                 },
                 child: const Text(
                   'Нийтлэх',

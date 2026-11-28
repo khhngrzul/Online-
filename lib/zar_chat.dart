@@ -148,7 +148,7 @@ Widget itemCard(BuildContext c, Item it) => InkWell(
                             fontWeight: FontWeight.w700,
                             color: it.kind.color)))),
             Positioned(
-                right: app.favs.contains(it) ? 38 : 8,
+                right: 50,
                 top: 8,
                 child: Container(
                     padding:
@@ -161,12 +161,30 @@ Widget itemCard(BuildContext c, Item it) => InkWell(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: Colors.white)))),
-            if (app.favs.contains(it))
-              const Positioned(
-                  right: 8,
-                  top: 8,
-                  child:
-                      Icon(Icons.favorite, color: Colors.redAccent, size: 20)),
+            Positioned(
+              right: 8,
+              top: 8,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => app.toggleFavorite(it),
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    app.favs.contains(it)
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: Colors.redAccent,
+                    size: 21,
+                  ),
+                ),
+              ),
+            ),
           ]),
           Expanded(
             child: Padding(
@@ -211,8 +229,7 @@ class ItemPage extends StatelessWidget {
                     icon: Icon(fav ? Icons.favorite : Icons.favorite_border,
                         color: fav ? Colors.redAccent : null),
                     onPressed: () {
-                      fav ? app.favs.remove(it) : app.favs.add(it);
-                      app.change();
+                      app.toggleFavorite(it);
                     }),
               if (mine)
                 IconButton(

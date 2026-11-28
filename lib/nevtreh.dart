@@ -5,6 +5,7 @@ import 'register.dart';
 import 'forget_password.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'api.dart';
 
 class SchoolLoginScreen extends StatefulWidget {
   const SchoolLoginScreen({super.key});
@@ -20,6 +21,7 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen>
   final codeController = TextEditingController();
   final passwordController = TextEditingController();
   String? loginError;
+  bool _isLoading = false;
 
   late final AnimationController _lottieController;
 
@@ -39,32 +41,48 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen>
     _lottieController = AnimationController(vsync: this);
   }
 
-     Future<void> _submitLogin() async {
+  Future<void> _submitLogin() async {
     final code = codeController.text.trim();
     final password = passwordController.text;
     if (code.isEmpty || password.isEmpty) {
       setState(() => loginError = 'Оюутны код болон нууц үгээ оруулна уу');
       return;
     }
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+      loginError = null;
+    });
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8001/api/auth/login/'),
+        Uri.parse('${Api.base}/api/auth/login/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': code, 'password': password}),
       );
       if (!mounted) return;
 
       if (response.statusCode != 200) {
+        final localError = app.login(code, password);
+        if (localError == null) {
+          await app.loadRemote();
+          if (mounted) setState(() => loginError = null);
+          return;
+        }
         setState(() => loginError = 'Оюутны код эсвэл нууц үг буруу');
         return;
       }
 
-      final data = jsonDecode(response.body);
-      final access = data['access'] as String;
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      final access = data['access'] as String?;
+      final refresh = data['refresh'] as String?;
+      if (access == null || refresh == null) {
+        setState(() => loginError = 'Серверээс буруу хариу ирлээ');
+        return;
+      }
 
       // Хэрэглэгчийн мэдээллийг Django-оос авах
       final meRes = await http.get(
-        Uri.parse('http://127.0.0.1:8001/api/auth/me/'),
+        Uri.parse('${Api.base}/api/auth/me/'),
         headers: {'Authorization': 'Bearer $access'},
       );
       if (!mounted) return;
@@ -73,6 +91,8 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen>
         return;
       }
       final me = jsonDecode(utf8.decode(meRes.bodyBytes));
+      Api.access = access;
+      Api.refresh = refresh;
 
       final studentCode = (me['student_code'] ?? code).toString();
       final fullName =
@@ -88,13 +108,25 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen>
       );
       app.users.remove(studentCode);
       app.register(user); // app.me = user болж, Shell рүү шилжинэ
+      await app.loadRemote();
+
+      if (!mounted) return;
 
       setState(() => loginError = null);
     } catch (e) {
       debugPrint('НЭВТРЭХ АЛДАА: $e');
       if (mounted) {
-        setState(() => loginError = 'Сервертэй холбогдож чадсангүй: $e');
+        final localError = app.login(code, password);
+        if (localError != null) {
+          setState(
+              () => loginError = 'Сервертэй холбогдож чадсангүй: $e');
+        } else {
+          await app.loadRemote();
+          if (mounted) setState(() => loginError = null);
+        }
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
